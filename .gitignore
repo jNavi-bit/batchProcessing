@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+
+# IDE and user-specific files
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# Publish output
+publish/
+
+# OS files
+.DS_Store
