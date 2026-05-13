@@ -1,0 +1,82 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel bp-panel--log" Elevation="0">
+    <div class="bp-panel-header">
+        <div>
+            <h3>@T("finished.title")</h3>
+            <p>@T("finished.description")</p>
+        </div>
+
+        <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small" Class="bp-section-chip">
+            @Tf("finished.entries", Entries.Count)
+        </MudChip>
+    </div>
+
+    @if (Entries.Count == 0)
+    {
+        <div class="bp-empty-state">
+            @T("finished.empty")
+        </div>
+    }
+    else
+    {
+        <div class="bp-log">
+            @foreach (var entry in Entries)
+            {
+                if (entry.Type == FinishedLogEntryType.ProcessCompleted)
+                {
+                    <div class="bp-log-card bp-log-card--result">
+                        <div class="bp-log-card__header">
+                            <strong>@Tf("finished.programTitle", entry.ProgramId ?? 0)</strong>
+                            <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" Class="bp-list-chip">
+                                @Tf("general.batch", entry.BatchNumber ?? 0)
+                            </MudChip>
+                        </div>
+                        <div class="bp-log-card__body">
+                            <span>@entry.OperationDisplay</span>
+                            <strong>@Tf("finished.result", entry.ResultDisplay ?? string.Empty)</strong>
+                            @if (entry.DurationSeconds is { } seconds)
+                            {
+                                <span class="bp-log-card__meta">@Tf("finished.duration", seconds)</span>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <MudAlert Severity="@GetSeverity(entry.Type)"
+                              Variant="Variant.Outlined"
+                              Dense="true"
+                              Class="bp-log-alert bp-log-alert--event">
+                        @GetEventLabel(entry)
+                    </MudAlert>
+                }
+            }
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public required IReadOnlyList<FinishedLogEntry> Entries { get; set; }
+
+    private static Severity GetSeverity(FinishedLogEntryType entryType)
+    {
+        return entryType switch
+        {
+            FinishedLogEntryType.BatchStarted => Severity.Info,
+            FinishedLogEntryType.BatchCompleted => Severity.Success,
+            _ => Severity.Normal
+        };
+    }
+
+    private string GetEventLabel(FinishedLogEntry entry)
+    {
+        return entry.Type switch
+        {
+            FinishedLogEntryType.BatchStarted => Tf("finished.batchStarted", entry.BatchNumber ?? 0),
+            FinishedLogEntryType.BatchCompleted => Tf("finished.batchCompleted", entry.BatchNumber ?? 0),
+            _ => Tf("finished.programTitle", entry.ProgramId ?? 0)
+        };
+    }
+}

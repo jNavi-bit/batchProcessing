@@ -1,0 +1,89 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel bp-panel--running bp-panel--fullheight" Elevation="0">
+    <div class="bp-panel-header">
+        <div>
+            <h3>@T("running.title")</h3>
+            <p>@T("running.description")</p>
+        </div>
+
+        @if (CurrentProcess is not null)
+        {
+            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Class="bp-status-chip">
+                @Tf("general.program", CurrentProcess.ProgramId)
+            </MudChip>
+        }
+    </div>
+
+    @if (CurrentProcess is null)
+    {
+        <div class="bp-empty-state">
+            @(RunStatus == SimulationRunStatus.CompletedPaused
+                ? T("running.empty.completed")
+                : T("running.empty.idle"))
+        </div>
+    }
+    else
+    {
+        <div class="bp-running-card">
+            <div class="bp-running-grid">
+                <div class="bp-running-field">
+                    <span>@T("running.name")</span>
+                    <strong>@CurrentProcess.ProgrammerName</strong>
+                </div>
+                <div class="bp-running-field">
+                    <span>@T("running.batch")</span>
+                    <strong>@CurrentProcess.BatchNumber</strong>
+                </div>
+                <div class="bp-running-field">
+                    <span>@T("running.operation")</span>
+                    <strong>@CurrentProcess.OperationDisplay</strong>
+                </div>
+                <div class="bp-running-field">
+                    <span>@T("running.estimatedMaxTime")</span>
+                    <strong>@Tf("general.seconds.short", CurrentProcess.EstimatedMaxTime)</strong>
+                </div>
+            </div>
+
+            <div class="bp-running-metrics">
+                <div class="bp-running-metric">
+                    <span>@T("running.elapsed")</span>
+                    <strong>@Tf("general.seconds.short", CurrentProcess.ElapsedTime)</strong>
+                </div>
+                <div class="bp-running-metric">
+                    <span>@T("running.remaining")</span>
+                    <strong>@Tf("general.seconds.short", CurrentProcess.RemainingTime)</strong>
+                </div>
+            </div>
+
+            <div class="bp-progress-meta">
+                <span>@T("running.progress")</span>
+                <strong>@($"{GetProgressValue():0}%")</strong>
+            </div>
+
+            <MudProgressLinear Color="Color.Success"
+                               Value="@GetProgressValue()"
+                               Rounded="true"
+                               Size="Size.Medium"
+                               Class="bp-progress" />
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public ProcessExecutionModel? CurrentProcess { get; set; }
+
+    [Parameter]
+    public SimulationRunStatus RunStatus { get; set; }
+
+    private double GetProgressValue()
+    {
+        if (CurrentProcess is null || CurrentProcess.EstimatedMaxTime == 0)
+        {
+            return 0;
+        }
+
+        return CurrentProcess.ElapsedTime / (double)CurrentProcess.EstimatedMaxTime * 100;
+    }
+}

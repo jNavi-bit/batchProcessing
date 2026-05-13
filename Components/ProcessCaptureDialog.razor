@@ -1,0 +1,141 @@
+@inherits LocalizedComponentBase
+@inject SimulationState SimulationState
+@inject ProcessValidationService ProcessValidationService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="1" Class="bp-dialog-stack">
+            <div class="bp-dialog-intro">
+                <MudText Typo="Typo.body2" Class="bp-dialog-copy">
+                    @T("capture.description")
+                </MudText>
+            </div>
+
+            @if (_validationErrors.Count > 0)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="bp-block-alert">
+                    <ul class="bp-validation-list">
+                        @foreach (var error in _validationErrors)
+                        {
+                            <li>@T(error)</li>
+                        }
+                    </ul>
+                </MudAlert>
+            }
+
+            <MudGrid Spacing="1" Class="bp-dialog-form">
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.ProgrammerName"
+                                  Label='@T("capture.field.programmerName")'
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="int"
+                                     @bind-Value="_model.ProgramId"
+                                     Label='@T("capture.field.programId")'
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="1"
+                                     HideSpinButtons="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="int"
+                                     @bind-Value="_model.EstimatedMaxTime"
+                                     Label='@T("capture.field.estimatedMaxTime")'
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="1"
+                                     HideSpinButtons="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect T="ProgramOperationType"
+                               @bind-Value="_model.Operation.OperationType"
+                               Label='@T("capture.field.operation")'
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true">
+                        @foreach (var operationType in Enum.GetValues<ProgramOperationType>())
+                        {
+                            <MudSelectItem Value="@operationType">
+                                @GetOperationLabel(operationType)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="double"
+                                     @bind-Value="_model.Operation.LeftOperand"
+                                     Label='@T("capture.field.operandA")'
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HideSpinButtons="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="double"
+                                     @bind-Value="_model.Operation.RightOperand"
+                                     Label='@T("capture.field.operandB")'
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HideSpinButtons="true" />
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Class="bp-dialog-cancel"
+                   OnClick="Cancel">
+            @T("general.cancel")
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="bp-dialog-submit"
+                   OnClick="SubmitAsync">
+            @T("capture.button.add")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private ProcessCaptureModel _model = new();
+    private IReadOnlyList<string> _validationErrors = [];
+
+    private Task SubmitAsync()
+    {
+        var validationErrors = ProcessValidationService.Validate(_model, SimulationState.CapturedProcesses);
+        if (validationErrors.Count > 0)
+        {
+            _validationErrors = validationErrors;
+            return Task.CompletedTask;
+        }
+
+        SimulationState.AddCapturedProcess(_model);
+        MudDialog.Close(DialogResult.Ok(true));
+        return Task.CompletedTask;
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private string GetOperationLabel(ProgramOperationType operationType)
+    {
+        return operationType switch
+        {
+            ProgramOperationType.Add => T("operation.add"),
+            ProgramOperationType.Subtract => T("operation.subtract"),
+            ProgramOperationType.Multiply => T("operation.multiply"),
+            ProgramOperationType.Divide => T("operation.divide"),
+            ProgramOperationType.Modulo => T("operation.modulo"),
+            ProgramOperationType.Power => T("operation.power"),
+            _ => T("capture.field.operation")
+        };
+    }
+}

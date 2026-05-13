@@ -1,0 +1,77 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel bp-panel--batch bp-panel--fullheight" Elevation="0">
+    <div class="bp-panel-header">
+        <div>
+            <h3>@T("batch.title")</h3>
+            <p>@T("batch.description")</p>
+        </div>
+
+        @if (CurrentBatch is not null)
+        {
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Class="bp-section-chip">
+                @Tf("general.batch", CurrentBatch.BatchNumber)
+            </MudChip>
+        }
+    </div>
+
+    @if (CurrentBatch is null)
+    {
+        <div class="bp-empty-state">
+            @(RunStatus == SimulationRunStatus.CompletedPaused
+                ? T("batch.empty.completed")
+                : T("batch.empty.idle"))
+        </div>
+    }
+    else
+    {
+        <div class="bp-scroll-area">
+            @foreach (var process in CurrentBatch.Processes)
+            {
+                <div class="bp-list-item bp-list-item--batch">
+                    <div>
+                        <strong>@process.ProgrammerName</strong>
+                        <div class="bp-list-meta">@Tf("batch.estimatedTime", process.EstimatedMaxTime)</div>
+                        <div class="bp-list-meta">@process.OperationDisplay</div>
+                    </div>
+
+                    <MudChip T="string" Color="@GetStatusColor(process.Status)" Variant="Variant.Outlined" Size="Size.Small" Class="bp-list-chip">
+                        @GetStatusLabel(process.Status)
+                    </MudChip>
+                </div>
+            }
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public BatchModel? CurrentBatch { get; set; }
+
+    [Parameter]
+    public SimulationRunStatus RunStatus { get; set; }
+
+    private static Color GetStatusColor(ProcessStatus processStatus)
+    {
+        return processStatus switch
+        {
+            ProcessStatus.Pending => Color.Default,
+            ProcessStatus.Ready => Color.Info,
+            ProcessStatus.Running => Color.Success,
+            ProcessStatus.Completed => Color.Secondary,
+            _ => Color.Default
+        };
+    }
+
+    private string GetStatusLabel(ProcessStatus processStatus)
+    {
+        return processStatus switch
+        {
+            ProcessStatus.Pending => T("status.pending"),
+            ProcessStatus.Ready => T("status.ready"),
+            ProcessStatus.Running => T("status.running"),
+            ProcessStatus.Completed => T("status.completed"),
+            _ => T("header.status.unknown")
+        };
+    }
+}

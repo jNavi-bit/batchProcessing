@@ -1,0 +1,178 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel" Elevation="0">
+    <div class="bp-panel-header">
+        <div>
+            <h3>@T("capture.title")</h3>
+            <p>@T("capture.description")</p>
+        </div>
+        <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small">
+            @Tf("capture.captured", CapturedProcesses.Count)
+        </MudChip>
+    </div>
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="bp-block-alert">
+            <ul class="bp-validation-list">
+                @foreach (var error in ValidationErrors)
+                {
+                    <li>@T(error)</li>
+                }
+            </ul>
+        </MudAlert>
+    }
+
+    <MudGrid Spacing="1">
+        <MudItem xs="12">
+            <MudTextField @bind-Value="Model.ProgrammerName"
+                          Label='@T("capture.field.programmerName")'
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Disabled="@Disabled"
+                          Immediate="true" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudNumericField T="int"
+                             @bind-Value="Model.ProgramId"
+                             Label='@T("capture.field.programId")'
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             Min="1"
+                             Disabled="@Disabled"
+                             HideSpinButtons="true" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudNumericField T="int"
+                             @bind-Value="Model.EstimatedMaxTime"
+                             Label='@T("capture.field.estimatedMaxTime")'
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             Min="1"
+                             Disabled="@Disabled"
+                             HideSpinButtons="true" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudSelect T="ProgramOperationType"
+                       @bind-Value="Model.Operation.OperationType"
+                       Label='@T("capture.field.operation")'
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Dense="true"
+                       Disabled="@Disabled">
+                @foreach (var operationType in Enum.GetValues<ProgramOperationType>())
+                {
+                    <MudSelectItem Value="@operationType">
+                        @GetOperationLabel(operationType)
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudNumericField T="double"
+                             @bind-Value="Model.Operation.LeftOperand"
+                             Label='@T("capture.field.operandA")'
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             Disabled="@Disabled"
+                             HideSpinButtons="true" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudNumericField T="double"
+                             @bind-Value="Model.Operation.RightOperand"
+                             Label='@T("capture.field.operandB")'
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             Disabled="@Disabled"
+                             HideSpinButtons="true" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       FullWidth="true"
+                       Disabled="@Disabled"
+                       OnClick="OnAddProcess">
+                @T("capture.button.add")
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <div class="bp-section-divider"></div>
+
+    <div class="bp-panel-header bp-panel-header--tight">
+        <div>
+            <h4>@T("capture.queue.title")</h4>
+            <p>@T("capture.queue.description")</p>
+        </div>
+    </div>
+
+    @if (CapturedProcesses.Count == 0)
+    {
+        <div class="bp-empty-state">
+            @T("capture.queue.empty")
+        </div>
+    }
+    else
+    {
+        <div class="bp-scroll-area">
+            @foreach (var item in CapturedProcesses.Select((process, index) => new { process, index }))
+            {
+                <div class="bp-list-item">
+                    <div>
+                        <strong>@item.process.ProgrammerName</strong>
+                        <div class="bp-list-meta">
+                            @Tf("general.program", item.process.ProgramId) · @Tf("general.seconds.short", item.process.EstimatedMaxTime)
+                        </div>
+                        <div class="bp-list-meta">
+                            @OperationFormatter.FormatExpression(
+                                item.process.Operation.LeftOperand,
+                                item.process.Operation.OperationType,
+                                item.process.Operation.RightOperand)
+                        </div>
+                    </div>
+
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                        @Tf("general.batch", GetBatchNumber(item.index))
+                    </MudChip>
+                </div>
+            }
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public required ProcessCaptureModel Model { get; set; }
+
+    [Parameter]
+    public required IReadOnlyList<string> ValidationErrors { get; set; }
+
+    [Parameter]
+    public required IReadOnlyList<ProcessCaptureModel> CapturedProcesses { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnAddProcess { get; set; }
+
+    private static int GetBatchNumber(int index)
+    {
+        return (index / BatchBuilderService.MaxBatchSize) + 1;
+    }
+
+    private string GetOperationLabel(ProgramOperationType operationType)
+    {
+        return operationType switch
+        {
+            ProgramOperationType.Add => T("operation.add"),
+            ProgramOperationType.Subtract => T("operation.subtract"),
+            ProgramOperationType.Multiply => T("operation.multiply"),
+            ProgramOperationType.Divide => T("operation.divide"),
+            ProgramOperationType.Modulo => T("operation.modulo"),
+            ProgramOperationType.Power => T("operation.power"),
+            _ => T("capture.field.operation")
+        };
+    }
+}

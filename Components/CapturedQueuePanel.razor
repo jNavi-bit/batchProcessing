@@ -1,0 +1,56 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel bp-panel--queue" Elevation="0">
+    <div class="bp-panel-header">
+        <div>
+            <h3>@T("capture.queue.title")</h3>
+            <p>@T("capture.queue.description")</p>
+        </div>
+        <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small" Class="bp-section-chip">
+            @Tf("capture.captured", CapturedProcesses.Count)
+        </MudChip>
+    </div>
+
+    @if (CapturedProcesses.Count == 0)
+    {
+        <div class="bp-empty-state">
+            @T("capture.queue.empty")
+        </div>
+    }
+    else
+    {
+        <div class="bp-scroll-area">
+            @foreach (var item in CapturedProcesses.Select((process, index) => new { process, index }))
+            {
+                <div class="bp-list-item bp-list-item--captured">
+                    <div>
+                        <strong>@item.process.ProgrammerName</strong>
+                        <div class="bp-list-meta">
+                            @Tf("general.program", item.process.ProgramId) · @Tf("general.seconds.short", item.process.EstimatedMaxTime)
+                        </div>
+                        <div class="bp-list-meta">
+                            @OperationFormatter.FormatExpression(
+                                item.process.Operation.LeftOperand,
+                                item.process.Operation.OperationType,
+                                item.process.Operation.RightOperand)
+                        </div>
+                    </div>
+
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Class="bp-list-chip">
+                        @Tf("general.batch", GetBatchNumber(item.index))
+                    </MudChip>
+                </div>
+            }
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public required IReadOnlyList<ProcessCaptureModel> CapturedProcesses { get; set; }
+
+    private static int GetBatchNumber(int index)
+    {
+        return (index / BatchBuilderService.MaxBatchSize) + 1;
+    }
+}

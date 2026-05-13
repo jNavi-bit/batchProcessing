@@ -1,10 +1,64 @@
-﻿<MudThemeProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+﻿@implements IDisposable
+@inject AppPreferencesState AppPreferencesState
+@inject AppPreferencesService AppPreferencesService
+@inject IJSRuntime JSRuntime
 
-<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-</Router>
+<div class="@(AppPreferencesState.IsDarkMode ? "bp-app bp-app--dark" : "bp-app bp-app--light")">
+    <MudThemeProvider Theme="@BatchProcessingTheme.Dashboard" IsDarkMode="@AppPreferencesState.IsDarkMode" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
+    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+    </Router>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppPreferencesState.OnChange += HandlePreferencesChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await AppPreferencesService.InitializeAsync();
+        await SyncHtmlThemeClassAsync();
+    }
+
+    private void HandlePreferencesChanged()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await SyncHtmlThemeClassAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task SyncHtmlThemeClassAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("bpThemeRoot.sync", AppPreferencesState.IsDarkMode);
+        }
+        catch (JSException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        AppPreferencesState.OnChange -= HandlePreferencesChanged;
+    }
+}

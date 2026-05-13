@@ -1,0 +1,76 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel bp-panel--hero" Elevation="0">
+    <div class="bp-hero">
+        <div>
+            <p class="bp-eyebrow">@T("header.eyebrow")</p>
+            <h2 class="bp-title">@T("header.title")</h2>
+            <p class="bp-subtitle">@T("header.subtitle")</p>
+        </div>
+
+        <MudChip T="string" Color="@GetStatusColor()" Variant="Variant.Filled" Size="Size.Small" Class="bp-status-chip">
+            @GetStatusLabel()
+        </MudChip>
+    </div>
+
+    <div class="bp-kpi-grid">
+        <div class="bp-kpi-card bp-kpi-card--counter">
+            <span class="bp-kpi-label">@T("header.kpi.globalCounter")</span>
+            <strong class="bp-kpi-value">@GlobalCounter</strong>
+        </div>
+        <div class="bp-kpi-card bp-kpi-card--pending">
+            <span class="bp-kpi-label">@T("header.kpi.pendingBatches")</span>
+            <strong class="bp-kpi-value">@PendingBatchCount</strong>
+        </div>
+        <div class="bp-kpi-card bp-kpi-card--total">
+            <span class="bp-kpi-label">@T("header.kpi.totalBatches")</span>
+            <strong class="bp-kpi-value">@TotalBatches</strong>
+        </div>
+        <div class="bp-kpi-card bp-kpi-card--completed">
+            <span class="bp-kpi-label">@T("header.kpi.completedProcesses")</span>
+            <strong class="bp-kpi-value">@CompletedProcesses / @TotalProcesses</strong>
+        </div>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public SimulationRunStatus RunStatus { get; set; }
+
+    [Parameter]
+    public int GlobalCounter { get; set; }
+
+    [Parameter]
+    public int PendingBatchCount { get; set; }
+
+    [Parameter]
+    public int TotalBatches { get; set; }
+
+    [Parameter]
+    public int TotalProcesses { get; set; }
+
+    [Parameter]
+    public int CompletedProcesses { get; set; }
+
+    private string GetStatusLabel()
+    {
+        return RunStatus switch
+        {
+            SimulationRunStatus.Idle => T("header.status.idle"),
+            SimulationRunStatus.Running => T("header.status.running"),
+            SimulationRunStatus.CompletedPaused => T("header.status.completed"),
+            _ => T("header.status.unknown")
+        };
+    }
+
+    private Color GetStatusColor()
+    {
+        return RunStatus switch
+        {
+            SimulationRunStatus.Idle => Color.Info,
+            SimulationRunStatus.Running => Color.Success,
+            SimulationRunStatus.CompletedPaused => Color.Warning,
+            _ => Color.Default
+        };
+    }
+}

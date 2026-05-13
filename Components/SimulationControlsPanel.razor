@@ -1,0 +1,87 @@
+@inherits LocalizedComponentBase
+
+<MudPaper Class="bp-panel bp-panel--controls" Elevation="0">
+    <div class="bp-panel-header">
+        <div>
+            <h3>@T("controls.title")</h3>
+            <p>@T("controls.description")</p>
+        </div>
+        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Class="bp-section-chip">
+            @Tf("capture.captured", CapturedCount)
+        </MudChip>
+    </div>
+
+    <MudStack Spacing="2">
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="bp-status-alert">
+            @StatusMessage
+        </MudAlert>
+
+        <div class="bp-actions-grid">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       Disabled="@(!CanCapture)"
+                       FullWidth="true"
+                       Class="bp-action-button bp-action-button--capture"
+                       OnClick="OnOpenCapture">
+                @T("capture.button.open")
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       Disabled="@(!CanStart)"
+                       FullWidth="true"
+                       Class="bp-action-button bp-action-button--start"
+                       OnClick="OnStart">
+                @T("controls.button.start")
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       Size="Size.Small"
+                       Disabled="@(!CanReset)"
+                       FullWidth="true"
+                       Class="bp-action-button bp-action-button--reset"
+                       OnClick="OnReset">
+                @T("controls.button.reset")
+            </MudButton>
+        </div>
+
+        @if (RunStatus == SimulationRunStatus.CompletedPaused)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Class="bp-success-alert">
+                @T("controls.completed.note")
+            </MudAlert>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public bool CanCapture { get; set; }
+
+    [Parameter]
+    public bool CanStart { get; set; }
+
+    [Parameter]
+    public bool CanReset { get; set; }
+
+    [Parameter]
+    public int CapturedCount { get; set; }
+
+    [Parameter]
+    public SimulationRunStatus RunStatus { get; set; }
+
+    [Parameter]
+    public string StatusMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnOpenCapture { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnStart { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnReset { get; set; }
+}

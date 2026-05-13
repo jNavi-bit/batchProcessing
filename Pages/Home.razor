@@ -1,7 +1,105 @@
 ﻿@page "/"
+@inherits LocalizedComponentBase
+@implements IDisposable
+@inject SimulationState SimulationState
+@inject SimulationEngineService SimulationEngineService
+@inject IDialogService DialogService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>@T("app.meta.title")</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="bp-page">
+    <MudStack Spacing="2" Class="bp-dashboard">
+        <SimulatorHeader RunStatus="@SimulationState.RunStatus"
+                         GlobalCounter="@SimulationState.GlobalCounter"
+                         PendingBatchCount="@SimulationState.PendingBatchCount"
+                         TotalBatches="@SimulationState.TotalBatchCount"
+                         TotalProcesses="@SimulationState.CapturedProcesses.Count"
+                         CompletedProcesses="@SimulationState.CompletedProcessCount" />
 
-Welcome to your new app.
+        <div class="bp-main-grid">
+            <div class="bp-grid-slot bp-grid-slot--controls">
+                <SimulationControlsPanel CanStart="@SimulationState.CanStart"
+                                         CanCapture="@SimulationState.CanCapture"
+                                         CanReset="@SimulationState.CanReset"
+                                         CapturedCount="@SimulationState.CapturedProcesses.Count"
+                                         RunStatus="@SimulationState.RunStatus"
+                                         StatusMessage="@GetStatusMessage()"
+                                         OnOpenCapture="OpenCaptureDialogAsync"
+                                         OnStart="StartSimulationAsync"
+                                         OnReset="ResetSimulationAsync" />
+            </div>
+
+            <div class="bp-grid-slot bp-grid-slot--running">
+                <RunningProcessPanel CurrentProcess="@SimulationState.CurrentProcess"
+                                     RunStatus="@SimulationState.RunStatus" />
+            </div>
+
+            <div class="bp-grid-slot bp-grid-slot--batch">
+                <CurrentBatchPanel CurrentBatch="@SimulationState.CurrentBatch"
+                                   RunStatus="@SimulationState.RunStatus" />
+            </div>
+
+            <div class="bp-grid-slot bp-grid-slot--queue">
+                <CapturedQueuePanel CapturedProcesses="@SimulationState.CapturedProcesses" />
+            </div>
+
+            <div class="bp-grid-slot bp-grid-slot--log">
+                <FinishedProcessesPanel Entries="@SimulationState.FinishedLog" />
+            </div>
+        </div>
+    </MudStack>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        SimulationState.OnChange += HandleSimulationStateChanged;
+    }
+
+    private async Task OpenCaptureDialogAsync(MouseEventArgs _)
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ProcessCaptureDialog>(T("capture.title"), options);
+        await dialog.Result;
+    }
+
+    private Task StartSimulationAsync(MouseEventArgs _)
+    {
+        return SimulationEngineService.StartAsync();
+    }
+
+    private Task ResetSimulationAsync(MouseEventArgs _)
+    {
+        SimulationEngineService.Reset();
+        return Task.CompletedTask;
+    }
+
+    private string GetStatusMessage()
+    {
+        return SimulationState.RunStatus switch
+        {
+            SimulationRunStatus.Running => Tf("controls.status.running", SimulationState.CurrentBatch?.BatchNumber ?? 0),
+            SimulationRunStatus.CompletedPaused => T("controls.status.completed"),
+            _ when SimulationState.CapturedProcesses.Count > 0 => Tf("controls.status.ready", SimulationState.CapturedProcesses.Count),
+            _ => T("controls.status.idleEmpty")
+        };
+    }
+
+    private void HandleSimulationStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public override void Dispose()
+    {
+        SimulationState.OnChange -= HandleSimulationStateChanged;
+        base.Dispose();
+    }
+}

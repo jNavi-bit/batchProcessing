@@ -1,16 +1,96 @@
-﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+﻿@inherits LocalizedLayoutComponentBase
+@inject AppPreferencesService AppPreferencesService
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="bp-shell">
+    <header class="bp-topbar">
+        <div class="bp-topbar__brand">
+            <p class="bp-topbar__eyebrow">@T("app.layout.eyebrow")</p>
+            <div>
+                <h1>@T("app.layout.title")</h1>
+                <p>@T("app.layout.subtitle")</p>
+            </div>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        <div class="bp-topbar__actions" role="toolbar" aria-label="@T("app.layout.toolbar")">
+            <div class="bp-topbar__toolbar">
+                <div class="bp-topbar__slot bp-topbar__slot--chip">
+                    <MudChip T="string"
+                             Color="Color.Default"
+                             Variant="Variant.Filled"
+                             Size="Size.Small"
+                             Class="bp-topbar__chip">
+                        @T("app.layout.batchSize")
+                    </MudChip>
+                </div>
+
+                <div class="bp-topbar__slot bp-topbar__slot--lang">
+                    <MudSelect T="AppLanguage"
+                               Value="@AppPreferencesState.Language"
+                               ValueChanged="HandleLanguageChangedAsync"
+                               Label="@T("app.layout.language")"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.None"
+                               Dense="true"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Rounded.Translate"
+                               Class="bp-topbar-lang-select"
+                               AnchorOrigin="Origin.BottomLeft"
+                               TransformOrigin="Origin.TopLeft">
+                        @foreach (var language in Enum.GetValues<AppLanguage>())
+                        {
+                            <MudSelectItem Value="@language">
+                                @T(GetLanguageLabelKey(language))
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                <div class="bp-topbar__slot bp-topbar__slot--theme">
+                    <MudTooltip Text="@GetCurrentThemeLabel()">
+                        <MudIconButton Icon="@GetCurrentThemeIcon()"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       Size="Size.Small"
+                                       Class="bp-theme-icon-button"
+                                       aria-label="@GetCurrentThemeLabel()"
+                                       OnClick="ToggleThemeAsync" />
+                    </MudTooltip>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="bp-shell__content">
+        @Body
     </main>
+
+    <footer class="bp-shell__credit" aria-label="@T("app.credit.aria")">
+        <span>@T("app.credit.line")</span>
+    </footer>
 </div>
+
+@code {
+    private Task ToggleThemeAsync()
+    {
+        return AppPreferencesService.ToggleThemeAsync();
+    }
+
+    private Task HandleLanguageChangedAsync(AppLanguage language)
+    {
+        return AppPreferencesService.SetLanguageAsync(language);
+    }
+
+    private string GetCurrentThemeLabel()
+    {
+        return AppPreferencesState.IsDarkMode
+            ? T("app.theme.dark")
+            : T("app.theme.light");
+    }
+
+    private string GetCurrentThemeIcon()
+    {
+        return AppPreferencesState.IsDarkMode
+            ? Icons.Material.Rounded.DarkMode
+            : Icons.Material.Rounded.LightMode;
+    }
+}
