@@ -593,6 +593,18 @@ h3:focus {
     box-shadow: 0 0 0 1px var(--bp-border), var(--bp-shadow-sm);
 }
 
+.bp-progress-track {
+    position: relative;
+    background: var(--bp-surface-soft);
+}
+
+.bp-progress-track__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--bp-accent-success);
+    transition: width 0.2s ease;
+}
+
 .bp-actions-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

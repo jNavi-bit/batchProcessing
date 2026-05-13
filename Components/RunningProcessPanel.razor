@@ -58,14 +58,17 @@
 
             <div class="bp-progress-meta">
                 <span>@T("running.progress")</span>
-                <strong>@($"{GetProgressValue():0}%")</strong>
+                <strong>@($"{_progressPercent:0}%")</strong>
             </div>
 
-            <MudProgressLinear Color="Color.Success"
-                               Value="@GetProgressValue()"
-                               Rounded="true"
-                               Size="Size.Medium"
-                               Class="bp-progress" />
+            <div class="bp-progress bp-progress-track"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-valuenow="@((int)Math.Round(_progressPercent))">
+                <div class="bp-progress-track__fill"
+                     style="width: @($"{Math.Clamp(_progressPercent, 0, 100).ToString(System.Globalization.CultureInfo.InvariantCulture)}%")"></div>
+            </div>
         </div>
     }
 </MudPaper>
@@ -77,13 +80,16 @@
     [Parameter]
     public SimulationRunStatus RunStatus { get; set; }
 
-    private double GetProgressValue()
-    {
-        if (CurrentProcess is null || CurrentProcess.EstimatedMaxTime == 0)
-        {
-            return 0;
-        }
+    private double _progressPercent;
 
-        return CurrentProcess.ElapsedTime / (double)CurrentProcess.EstimatedMaxTime * 100;
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _progressPercent = CurrentProcess is null || CurrentProcess.EstimatedMaxTime == 0
+            ? 0
+            : Math.Clamp(
+                CurrentProcess.ElapsedTime / (double)CurrentProcess.EstimatedMaxTime * 100,
+                0,
+                100);
     }
 }
