@@ -28,10 +28,6 @@ jobs:
             echo "href=/$REPO/" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Patch wwwroot base href
-        run: |
-          sed -i "s|<base href=\"/\" />|<base href=\"${{ steps.base.outputs.href }}\" />|" wwwroot/index.html
-
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
@@ -39,14 +35,37 @@ jobs:
       - name: Publish
         run: dotnet publish batch_processing.csproj -c Release -o "${{ github.workspace }}/publish-out"
 
+      - name: Patch published base href
+        run: |
+          INDEX="${{ github.workspace }}/publish-out/wwwroot/index.html"
+          sed -i "s|<base href=\"/\" />|<base href=\"${{ steps.base.outputs.href }}\" />|" "$INDEX"
+
       - name: GitHub Pages helpers
         run: |
           touch "${{ github.workspace }}/publish-out/wwwroot/.nojekyll"
           cp "${{ github.workspace }}/publish-out/wwwroot/index.html" "${{ github.workspace }}/publish-out/wwwroot/404.html"
 
+      - name: Verify static site output
+        run: |
+          ROOT="${{ github.workspace }}/publish-out/wwwroot"
+          test -f "$ROOT/index.html" || { echo "::error::Missing $ROOT/index.html"; exit 1; }
+          test -d "$ROOT/_framework" || { echo "::error::Missing Blazor _framework folder"; exit 1; }
+          echo "Site root has $(find "$ROOT" -type f | wc -l) files."
+
       - name: Push to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: publish-out/wwwroot
+          publish_dir: ${{ github.workspace }}/publish-out/wwwroot
           force_orphan: true
+          enable_jekyll: false
+
+      - name: Pages configuration hint
+        if: success()
+        run: |
+          {
+            echo "## GitHub Pages"
+            echo "If the site shows **README.md** instead of the Blazor app, Pages is almost certainly serving the **wrong branch**."
+            echo ""
+            echo "Use **Settings → Pages → Build and deployment**: **Deploy from a branch**, branch **gh-pages**, folder **/** (root) — not **main** at repo root (Jekyll can turn README into the homepage there)."
+          } >> "$GITHUB_STEP_SUMMARY"
