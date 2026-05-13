@@ -1,0 +1,61 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute base href
+        id: base
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          if [[ "$REPO" == *.github.io ]]; then
+            echo "href=/" >> "$GITHUB_OUTPUT"
+          else
+            echo "href=/$REPO/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Patch wwwroot base href
+        run: |
+          sed -i "s|<base href=\"/\" />|<base href=\"${{ steps.base.outputs.href }}\" />|" wwwroot/index.html
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish
+        run: dotnet publish batch_processing.csproj -c Release -o "${{ github.workspace }}/publish-out"
+
+      - name: GitHub Pages helpers
+        run: |
+          touch "${{ github.workspace }}/publish-out/wwwroot/.nojekyll"
+          cp "${{ github.workspace }}/publish-out/wwwroot/index.html" "${{ github.workspace }}/publish-out/wwwroot/404.html"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish-out/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
