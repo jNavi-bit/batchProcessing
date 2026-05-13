@@ -62,10 +62,16 @@ jobs:
 
       - name: Pages configuration hint
         if: success()
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
         run: |
+          URL="https://${OWNER}.github.io/${REPO}/"
           {
-            echo "## GitHub Pages"
-            echo "If the site shows **README.md** instead of the Blazor app, Pages is almost certainly serving the **wrong branch**."
+            echo "## GitHub Pages — open this URL"
+            echo "Project Pages URL: **${URL}**"
             echo ""
-            echo "Use **Settings → Pages → Build and deployment**: **Deploy from a branch**, branch **gh-pages**, folder **/** (root) — not **main** at repo root (Jekyll can turn README into the homepage there)."
+            echo "A **404 / index.html** message often means you opened **https://${OWNER}.github.io/** (no repository path). A project site must include the repo name, like the URL above."
+            echo ""
+            echo "In **Settings → Pages → Build and deployment**, use **Deploy from a branch**: branch **gh-pages**, folder **/** (root). Wait until the workflow turns green, then reload the project URL above."
           } >> "$GITHUB_STEP_SUMMARY"
