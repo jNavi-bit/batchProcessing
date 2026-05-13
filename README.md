@@ -10,4 +10,3 @@
 cd batch_processing
 dotnet run
 ```
-
