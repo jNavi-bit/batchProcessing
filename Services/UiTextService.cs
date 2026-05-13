@@ -23,9 +23,6 @@ public sealed class UiTextService
         ["app.language.spanish"] = "Spanish",
         ["app.language.german"] = "German",
 
-        ["header.eyebrow"] = "Operating Systems Simulator",
-        ["header.title"] = "Batch Processing Dashboard",
-        ["header.subtitle"] = "A polished execution board for fixed-size batch scheduling and process review.",
         ["header.status.idle"] = "Ready to capture",
         ["header.status.running"] = "Simulation running",
         ["header.status.completed"] = "Completed and paused",
@@ -132,9 +129,6 @@ public sealed class UiTextService
         ["app.language.spanish"] = "Español",
         ["app.language.german"] = "Alemán",
 
-        ["header.eyebrow"] = "Simulador de Sistemas Operativos",
-        ["header.title"] = "Dashboard de Procesamiento por Lotes",
-        ["header.subtitle"] = "Un tablero de ejecución pulido para planificar lotes fijos y revisar procesos.",
         ["header.status.idle"] = "Listo para capturar",
         ["header.status.running"] = "Simulación en ejecución",
         ["header.status.completed"] = "Finalizado y pausado",
@@ -241,9 +235,6 @@ public sealed class UiTextService
         ["app.language.spanish"] = "Spanisch",
         ["app.language.german"] = "Deutsch",
 
-        ["header.eyebrow"] = "Betriebssystem-Simulator",
-        ["header.title"] = "Stapelverarbeitungs-Dashboard",
-        ["header.subtitle"] = "Ein aufgeraeumtes Ausfuehrungsboard fuer feste Stapel und Prozessanalyse.",
         ["header.status.idle"] = "Bereit zur Eingabe",
         ["header.status.running"] = "Simulation laeuft",
         ["header.status.completed"] = "Abgeschlossen und pausiert",

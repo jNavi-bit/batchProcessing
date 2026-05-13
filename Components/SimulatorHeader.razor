@@ -1,13 +1,7 @@
 @inherits LocalizedComponentBase
 
 <MudPaper Class="bp-panel bp-panel--hero" Elevation="0">
-    <div class="bp-hero">
-        <div>
-            <p class="bp-eyebrow">@T("header.eyebrow")</p>
-            <h2 class="bp-title">@T("header.title")</h2>
-            <p class="bp-subtitle">@T("header.subtitle")</p>
-        </div>
-
+    <div class="bp-hero bp-hero--compact">
         <MudChip T="string" Color="@GetStatusColor()" Variant="Variant.Filled" Size="Size.Small" Class="bp-status-chip">
             @GetStatusLabel()
         </MudChip>

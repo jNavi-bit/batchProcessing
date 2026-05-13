@@ -279,29 +279,9 @@ h3:focus {
     margin-bottom: 0.85rem;
 }
 
-.bp-eyebrow {
-    margin: 0 0 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--bp-text-muted);
-}
-
-.bp-title {
-    margin: 0;
-    font-size: clamp(1.35rem, 2.3vw, 2.1rem);
-    line-height: 1.08;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--bp-text-primary);
-}
-
-.bp-subtitle {
-    margin: 0.25rem 0 0;
-    max-width: 42rem;
-    font-size: 0.92rem;
-    color: var(--bp-text-secondary);
+.bp-hero--compact {
+    justify-content: flex-end;
+    margin-bottom: 0.65rem;
 }
 
 .bp-status-chip {
